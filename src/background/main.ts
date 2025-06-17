@@ -61,3 +61,15 @@ onMessage('get-current-tab', async () => {
     }
   }
 })
+
+onMessage('open-sidepanel', async ({ sender }) => {
+  try {
+    // Sidepanel 只能由后台调用
+    // @ts-expect-error chrome 兼容 API
+    await browser.sidePanel.open({ tabId: sender.tabId })
+    console.log('Sidepanel opened for tab', sender.tabId)
+  }
+  catch (err) {
+    console.error('Failed to open sidepanel:', err)
+  }
+})
