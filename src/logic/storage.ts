@@ -13,3 +13,9 @@ export const { data: ShieldingStyle, dataReady: ShieldingStyleReady } = useWebEx
   'shielding-style',
   'Vague',
 )
+
+// 屏蔽数量
+export const { data: shieldingNum, dataReady: shieldingNumReady } = useWebExtensionStorage<number>(
+  'shielding-num',
+  0,
+)

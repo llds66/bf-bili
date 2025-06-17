@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import NumberFlow from '@number-flow/vue'
 import Button from 'primevue/button'
 import Drawer from 'primevue/drawer'
 import InputText from 'primevue/inputtext'
@@ -7,7 +8,7 @@ import Tag from 'primevue/tag'
 
 import { ref } from 'vue'
 
-import { blockedWords, ShieldingStyle } from '~/logic/storage'
+import { blockedWords, shieldingNum, ShieldingStyle } from '~/logic/storage'
 
 const value = ref('')
 
@@ -59,7 +60,7 @@ function openDrawer() {
         <Logo />
         <div class="flex  flex-1 justify-end">
           <div class="btn-bg-hover" @click="openOptionsPage">
-            <div class="i-mingcute-settings-1-line text-1rem" />
+            <div class="i-mingcute-more-1-line text-1rem" />
           </div>
           <a href="https://github.com/llds66/bf-bili" class="btn-bg-hover" @click="openOptionsPage">
             <div class="i-mingcute-github-line text-1rem" />
@@ -102,6 +103,10 @@ function openDrawer() {
             <div class="flex-center text-stone-500 hover:text-stone-950 cursor-pointer" @click="openDrawer">
               <div class="i-mingcute-right-small-line text-lg" />
               屏蔽词管理
+            </div>
+            <div class="flex-center gap-1 text-stone-400">
+              <span>已屏蔽</span>
+              <NumberFlow :value="shieldingNum" />
             </div>
             <div class=" text-stone-400">
               标题含有屏蔽词时自动屏蔽

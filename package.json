@@ -31,6 +31,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@number-flow/vue": "^0.4.8",
     "@primeuix/themes": "^1.1.1",
     "primevue": "^4.3.5"
   },
