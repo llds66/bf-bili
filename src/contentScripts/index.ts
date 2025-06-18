@@ -1,37 +1,61 @@
 import { createApp } from 'vue'
 import { onMessage } from 'webext-bridge/content-script'
 import { setupApp } from '~/logic/common-setup'
-import { blockedWords, blockedWordsReady, shieldingNum, ShieldingStyle, ShieldingStyleReady } from '~/logic/storage'
+import {
+  blockedUPs,
+  blockedUPsReady,
+  blockedWords,
+  blockedWordsReady,
+  shieldingNum,
+  ShieldingStyle,
+  ShieldingStyleReady,
+} from '~/logic/storage'
 import App from './views/App.vue'
 
+// 判断视频标题是否包含屏蔽关键词
 function shouldBlock(title: string) {
   return blockedWords.value.some(keyword => title.includes(keyword))
 }
+
+// 判断UP主名是否在屏蔽列表中
+function shouldBlockByAuthor(author: string) {
+  return blockedUPs.value.some(name => author.includes(name))
+}
+
+// 增加被屏蔽视频数量
 function addNum() {
   shieldingNum.value++
 }
 
+// 核心：查找卡片并根据标题或作者进行屏蔽
 function hideMatchingCards() {
   const cards = document.querySelectorAll<HTMLElement>('.bili-feed-card, .video-card')
   console.log('[屏蔽逻辑] 找到卡片数:', cards.length)
+
   cards.forEach((card) => {
     if ((card as any).__blocked)
       return
 
+    // 获取标题
     const titleEl
       = card.querySelector('.bili-video-card__info--tit, .title, .bili-dyn-title')
         || card.querySelector('.video-card__info p')
     const text = titleEl?.textContent?.trim() || ''
 
-    if (titleEl && shouldBlock(text)) {
+    // 获取作者
+    const authorEl
+      = card.querySelector('.bili-video-card__info--author, .up-name__text')
+    const author = authorEl?.textContent?.trim() || ''
+
+    // 判断是否需要屏蔽
+    if ((text && shouldBlock(text)) || (author && shouldBlockByAuthor(author))) {
       const feedCard = card.closest('.feed-card') as HTMLElement | null
-      console.log('[屏蔽内容]', text)
+      console.log('[屏蔽内容]', { text, author })
       addNum()
 
       if (ShieldingStyle.value === 'Vague') {
         const el = feedCard || card
         el.style.filter = 'blur(4px) grayscale(100%) opacity(0.3)'
-        // el.style.pointerEvents = 'none'
         el.style.userSelect = 'none'
       }
       else if (ShieldingStyle.value === 'Hide') {
@@ -40,11 +64,14 @@ function hideMatchingCards() {
         else
           card.remove()
       }
+
+      // 标记已处理
       (card as any).__blocked = true
     }
   })
 }
 
+// DOM 变化监听（节流处理）
 let debounceTimer: NodeJS.Timeout | null = null
 const observer = new MutationObserver(() => {
   if (debounceTimer)
@@ -54,6 +81,7 @@ const observer = new MutationObserver(() => {
   }, 300)
 })
 
+// 启动监听器
 function startObserver() {
   console.log('[observer] 启动观察')
   const target = document.querySelector('.bili-feed4-layout') || document.body
@@ -64,6 +92,7 @@ function startObserver() {
   hideMatchingCards()
 }
 
+// 主流程启动
 (async () => {
   console.info('[vitesse-webext] Hello world from content script')
 
@@ -74,11 +103,16 @@ function startObserver() {
   // 等待 storage 数据准备完毕
   await Promise.all([
     blockedWordsReady,
+    blockedUPsReady,
     ShieldingStyleReady,
   ])
-  console.log('[数据已准备完毕]', blockedWords.value, ShieldingStyle.value)
+  console.log('[数据已准备完毕]', {
+    blockedWords: blockedWords.value,
+    blockedUPs: blockedUPs.value,
+    style: ShieldingStyle.value,
+  })
 
-  // Vue 应用挂载
+  // Vue 应用挂载（显示统计信息或设置入口）
   const container = document.createElement('div')
   container.id = __NAME__
   const root = document.createElement('div')
